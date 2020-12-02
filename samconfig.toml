@@ -1,0 +1,13 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "wordpress-app"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1hkrnwx4nnd8x"
+s3_prefix = "wordpress-app"
+region = "eu-central-1"
+profile = "workshop1"
+PublicHostedZone = "workshop1.cordev.it"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+parameter_overrides = "CidrBlock=\"10.0.0.0/16\" Environment=\"dev\" GitRepository=\"https://github.com/FrancescoPolitanoCorley/wordpress-excercise\" PublicHostedZone=\"workshop1.cordev.it\""

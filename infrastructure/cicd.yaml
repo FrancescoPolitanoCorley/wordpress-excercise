@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: AdriBot API CI/CD
+Parameters:
+  Branch:
+    Type: String
+  CodeBuildImage:
+    Type: String
+  GithubHttpsRepository:
+    Type: String
+Resources:
+  CodeBuild:
+    Type: 'AWS::CodeBuild::Project'
+    Properties:
+      Artifacts:
+        Type: NO_ARTIFACTS
+      BadgeEnabled: true
+      Cache:
+        Modes:
+          - LOCAL_SOURCE_CACHE
+          - LOCAL_DOCKER_LAYER_CACHE
+          - LOCAL_CUSTOM_CACHE
+        Type: LOCAL
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: !Ref CodeBuildImage
+        Type: LINUX_CONTAINER
+        PrivilegedMode: true
+      Name: !Sub "${AWS::StackName}-cicd"
+      QueuedTimeoutInMinutes: 15
+      ServiceRole: !Ref CodeBuildRole
+      Source:
+        Auth:
+          Type: OAUTH
+        Location: !Ref GithubHttpsRepository
+        Type: GITHUB
+      SourceVersion: !Join
+        - ''
+        - - refs/heads/
+          - !Ref Branch
+      TimeoutInMinutes: 20
+      Triggers:
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: PUSH
+            - Type: HEAD_REF
+              Pattern: !Join
+                - ''
+                - - refs/heads/
+                  - !Ref Branch
+        Webhook: true
+  CodeBuildRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: !Sub "${AWS::StackName}-role"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: '*'
+                Action:
+                  - '*'

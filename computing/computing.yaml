@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  MyNetwork:
+    Type: String  
+  PublicHostedZone:
+    Type: String
+
+Resources:
+  WPApplication:
+      Type: AWS::ElasticBeanstalk::Application
+      Properties:
+        ApplicationName: my-wp-app
+        Description: "An application in Wordpress"
+  BeanstalkSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for beanstalk
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref MyNetwork
+
+Outputs:
+  MyWPApplication:
+    Value: !Ref WPApplication
+  BeanstalkSecurityGroup:
+    Value: !Ref BeanstalkSecurityGroup

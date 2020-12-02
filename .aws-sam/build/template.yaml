@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  CidrBlock:
+    Type: String
+  Environment:
+    Type: String
+  GitRepository:
+    Type: String
+  PublicHostedZone:
+    Type: String
+Resources:
+  Network:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ../../infrastructure/vpc.yaml
+      Parameters:
+        CidrBlock:
+          Ref: CidrBlock
+        Environment:
+          Ref: Environment
+  Rds:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ../../database/rds.yaml
+      Parameters:
+        Subnet1:
+          Fn::GetAtt:
+          - Network
+          - Outputs.MySubnet1
+        Subnet2:
+          Fn::GetAtt:
+          - Network
+          - Outputs.MySubnet2
+        SecurityGroup:
+          Ref: RDSSecurityGroup
+  Application:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ../../computing/computing.yaml
+      Parameters:
+        MyNetwork:
+          Fn::GetAtt:
+          - Network
+          - Outputs.MyNetwork
+        PublicHostedZone:
+          Ref: PublicHostedZone
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for a DB
+      VpcId:
+        Fn::GetAtt:
+        - Network
+        - Outputs.MyNetwork
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '80'
+        ToPort: '80'
+        CidrIp: '0.0.0.0/0'
+      - IpProtocol: tcp
+        ToPort: '3306'
+        FromPort: '3306'
+        SourceSecurityGroupId:
+          Fn::GetAtt:
+          - Application
+          - Outputs.BeanstalkSecurityGroup

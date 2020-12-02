@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  Subnet1:
+    Type: String
+  Subnet2:
+    Type: String
+  SecurityGroup:
+    Type: String
+
+Resources:
+  Database:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBSubnetGroupName: !Ref SubnetGroup
+      AllocatedStorage: '5'
+      DBInstanceClass: db.t2.small
+      Engine: MySQL
+      DBName: wordpress
+      MasterUsername: '{{resolve:secretsmanager:MySecret:SecretString:username}}'
+      MasterUserPassword: '{{resolve:secretsmanager:MySecret:SecretString:password}}'
+    DeletionPolicy: Snapshot
+  SubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: "MY subnet group"
+      SubnetIds: 
+        - !Ref Subnet1
+        - !Ref Subnet2
+
+
+

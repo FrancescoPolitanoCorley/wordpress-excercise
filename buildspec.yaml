@@ -1,0 +1,13 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      # SAM CLI è molto vecchia nelle immagini di codebuild ed è necessario averla aggiornata
+      - pip3 install --no-cache-dir --upgrade aws-sam-cli
+  build:
+    commands:
+      - CURRENT_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed s/branch\\///g | sed 's/ *$//g')
+      - echo "current branch -> ${CURRENT_BRANCH}"
+      - sam build
+      - sam deploy --config-env ${CURRENT_BRANCH}
